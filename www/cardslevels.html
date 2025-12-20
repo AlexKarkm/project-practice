@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="cordova.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header-levels">
+        <button class="back-button" onclick="location.href='games.html'">
+            <img src="icons/arrow.png" class="back-button-icon">
+        </button>
+        <button class="title-levels-button" onclick="toggleCards()">&nbsp;Найди пару<img src="icons/question.png" class="icon-img question-icon">
+        </button>
+    </header>
+    <main class="main-numbers">
+         <div class="levels-container">
+
+            <button class="level-circle" style="--level-color: #4CAF50;">1</button>
+            <button class="level-circle" style="--level-color: #4CAF50;">2</button>
+            <button class="level-circle" style="--level-color: #4CAF50;">3</button>
+
+            <button class="level-circle" style="--level-color: #FF9800;">4</button>
+            <button class="level-circle" style="--level-color: #FF9800;">5</button>
+            <button class="level-circle" style="--level-color: #FF9800;">6</button>
+            <button class="level-circle" style="--level-color: #FF9800;">7</button>
+
+            <button class="level-circle" style="--level-color: #F44336;">8</button>
+            <button class="level-circle" style="--level-color: #F44336;">9</button>
+            <button class="level-circle" style="--level-color: #F44336;">10</button>
+            <button class="level-circle" style="--level-color: #F44336;">11</button>
+        </div>
+    </main>
+
+    <div id="cards-popup" class="popup hidden">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span>
+                    <img src="icons/rules.png" class="icon-img popup-icon">
+                    Правила игры:
+                </span>
+                <button onclick="toggleCards()" class="close-btn">
+                    <img src="icons/close.png" class="icon-img close-icon">
+                </button>
+            </div>
+            <p>• Перед вами набор перевернутых карточек;<br>
+            • Каждая карточка имеет пару с таким же цветом;<br>
+            • За один ход можно перевернуть две карточки;<br>
+            • Если карточки совпадают - они остаются открытыми;<br>
+            • Если не совпадают - переворачиваются обратно;<br>
+            • Ваша задача - найти все пары за минимальное количество ходов.</p>
+        </div>
+    </div>
+
+<script>
+  // Правила игры
+  function toggleCards() {
+    document.getElementById("cards-popup").classList.toggle("hidden");
+  }
+
+  window.addEventListener("click", function (event) {
+    const popups = ["cards-popup"];
+    popups.forEach(id => {
+      const popup = document.getElementById(id);
+      if (!popup.classList.contains("hidden") && !popup.querySelector(".popup-content").contains(event.target)) {
+        popup.classList.add("hidden");
+      }
+    });
+  });
+
+  document.querySelectorAll(".title-levels-button").forEach(btn => {
+    btn.addEventListener("click", e => e.stopPropagation());
+  });
+  // Открытие уровней
+  const unlockedLevel = parseInt(localStorage.getItem('unlockedLevelCards')) || 1;
+  const totalLevels = 10;
+
+  const circles = document.getElementsByClassName('level-circle');
+
+    for (let i = 0; i < circles.length; i++) {
+        const btn = circles[i];
+        if (i+1 > unlockedLevel) {
+            btn.classList.add('locked');
+            btn.disabled = true;
+        } else {
+            btn.onclick = () => {
+            window.location.href = `cardsgame.html?level=${i+1}`;
+        };
+      }
+    }
+
+</script>
+
+</body>
+</html>
+

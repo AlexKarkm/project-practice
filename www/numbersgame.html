@@ -1,0 +1,250 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="cordova.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <audio id="successSound" src="sounds/success.mp3" preload="auto"></audio>
+    <audio id="failSound" src="sounds/fail.mp3" preload="auto"></audio>
+    <audio id="tickingsound" src="sounds/ticking.mp3" preload="auto" loop></audio>
+</head>
+<body>
+    <header class="header-levels">
+        <button class="back-button" onclick="location.href='numberslevels.html'">
+            <img src="icons/arrow.png" class="back-button-icon">
+        </button>
+        <div id="level" class="title-games">Уровень</div>
+    </header>
+    <main class="game-main">
+        <div class="centered" id="prepare-screen">
+            <p>Приготовьтесь запоминать числа на экране!</p>
+            <div class="loading-container">
+                <div class="loading-circle">
+                    <svg class="loading-svg" viewBox="0 0 100 100">
+                    <circle class="loading-circle-bg" cx="50" cy="50" r="45"/>
+                    <circle class="loading-circle-progress" cx="50" cy="50" r="45"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="centered" id="game-screen" style="display:none;">
+            <div id="number-display" class="number"></div>
+
+            <div class="input-section" id="input-section">
+                <p style="font-size: 24px;">Введите числа</p>
+                <input type="text" id="user-input" inputmode="numeric" autocomplete="off" placeholder="Например: 20 5 15 9"/>
+            </div>
+
+            <div class="result" id="result-section">
+                <p id="result-message" class="result-message" ></p>
+                <p id="result-numbers" class="result-numbers" ></p>
+                <p id="correct-answer" class="result-answer" ></p>
+                <button class="again-button game-button" onclick="restartLevel()">Повторить</button>
+                <button id="next-button" class="next-button game-button" onclick="goToNextLevel()">Продолжить</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer-games">
+    </footer>
+
+    <div id="numbers-popup" class="popup hidden">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span>
+                    <img src="icons/rules.png" class="icon-img popup-icon">
+                    Правила игры:
+                </span>
+                <button onclick="toggleNumbers()" class="close-btn">
+                    <img src="icons/close.png" class="icon-img close-icon">
+                </button>
+            </div>
+            <p>• В начале каждого уровня на экране появятся числа.<br>
+                • У вас есть несколько секунд, чтобы их запомнить.<br>
+                • Числа исчезнут, и вам нужно ввести их в том же порядке.<br>
+                • Если вы ввели все числа правильно, переходите на следующий уровень.<br>
+                • Ошибка завершает игру, но вы можете попробовать снова!</p>
+        </div>
+    </div>
+
+    <script>
+
+  function toggleNumbers() {
+    document.getElementById("numbers-popup").classList.toggle("hidden");
+  }
+
+  window.addEventListener("click", function (event) {
+    const popups = ["numbers-popup"];
+    popups.forEach(id => {
+      const popup = document.getElementById(id);
+      if (!popup.classList.contains("hidden") && !popup.querySelector(".popup-content").contains(event.target)) {
+        popup.classList.add("hidden");
+      }
+    });
+  });
+
+  document.querySelectorAll(".title-levels-button").forEach(btn => {
+    btn.addEventListener("click", e => e.stopPropagation());
+  });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const level = parseInt(urlParams.get('level'));
+
+    const soundEnabled = localStorage.getItem('sound') !== 'off';
+
+    const levelsData = {
+      1: [9, 31, 3],
+      2: [2, 21, 44],
+      3: [32, 42, 42],
+      4: [11, 5, 8, 99],
+      5: [42, 1, 55, 12],
+      6: [81, 17, 53, 92],
+      7: [42, 56, 85, 428],
+      8: [857, 512, 66, 79],
+      9: [192, 822, 31, 57, 12],
+      10: [421, 119, 725, 53, 91]
+    };
+
+    function generateRandomBasedOnNumber(num) {
+        if (num < 10) {
+            return Math.floor(Math.random() * 10) + 1;
+        } else if (num < 100) {
+            return Math.floor(Math.random() * 90) + 10;
+        } else if (num < 1000) {
+            return Math.floor(Math.random() * 900) + 100;
+        } else {
+            return Math.floor(Math.random() * 9000) + 1000; 
+        }
+    }
+
+    const randomizedLevels = {};
+
+    for (const [level, numbers] of Object.entries(levelsData)) {
+    randomizedLevels[level] = numbers.map(num => generateRandomBasedOnNumber(num));
+    }
+
+
+    const sequence = shuffle([...randomizedLevels[level]]);
+    let userInput = [];
+
+    const prepareScreen = document.getElementById('prepare-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const levelSpan = document.getElementById("level");
+    const numberDisplay = document.getElementById('number-display');
+    const inputSection = document.getElementById('input-section');
+    const resultSection = document.getElementById('result-section');
+    const resultMessage = document.getElementById('result-message');
+    const resultNumbers = document.getElementById('result-numbers');
+    const correctAnswer = document.getElementById('correct-answer');
+    const nextButton = document.getElementById('next-button');
+
+    document.getElementById('user-input').addEventListener('input', function (e) {
+    this.value = this.value.replace(/[^\d ]/g, '');
+});
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    levelSpan.textContent = "Уровень " + level.toString();
+
+    setTimeout(() => {
+      prepareScreen.style.display = 'none';
+      gameScreen.style.display = 'flex';
+      startGame();
+    }, 3000);
+
+    function startGame() {
+      let index = 0;
+      numberDisplay.style.display = 'block';
+
+      function showNumber() {
+        if (index < sequence.length) {
+          numberDisplay.textContent = sequence[index];
+          index++;
+          setTimeout(() => {
+            numberDisplay.textContent = '';
+            setTimeout(showNumber, 500); 
+          }, 1000); 
+        } else {
+          numberDisplay.style.display = 'none';
+          inputSection.style.display = 'flex';
+          document.getElementById('user-input').focus();
+        }
+      }
+
+      showNumber();
+    }
+
+    document.getElementById('user-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const input = this.value.trim().split(/\s+/).map(Number);
+        inputSection.style.display = 'none';
+        checkResult(input);
+      }
+    });
+
+    function checkResult(input) {
+      resultSection.style.display = 'block';
+      let isCorrect = true;
+      const display = sequence.map((num, i) => {
+        if (input[i] === num) {
+          return `<span class="green">${num}</span>`;
+        } else {
+          isCorrect = false;
+          return `<span class="red">${input[i] !== undefined ? input[i] : '_'}</span>`;
+        }
+      }).join(' ');
+
+      resultNumbers.innerHTML = display;
+
+
+      if (isCorrect) {
+        if (soundEnabled) document.getElementById('successSound').play();
+        resultMessage.textContent = '🎉 Отлично!';
+        unlockNextLevel(level);
+
+        const currentLevel = parseInt(new URLSearchParams(window.location.search).get('level')) || 1;
+
+        if (level < 10) {
+            nextButton.style.display = 'inline-block';
+        }
+        else {
+            resultMessage.textContent = 'Вы прошли все уровни!';
+            correctAnswer.textContent = 'Отличная работа!';
+            continueButton.classList.add('hidden'); 
+        }
+        correctAnswer.textContent = '';
+      } else {
+        if (soundEnabled) document.getElementById('failSound').play();
+        resultMessage.textContent = 'Вы допустили ошибку!';
+        correctAnswer.textContent = 'Правильный результат: ' + sequence.join(' ');
+        nextButton.style.display = 'none';
+      }
+    }
+
+    function restartLevel() {
+      location.reload();
+    }
+
+    function goToNextLevel() {
+      const next = level + 1;
+      window.location.href = `numbersgame.html?level=${next}`;
+    }
+
+    function unlockNextLevel(currentLevel) {
+      const nextLevel = currentLevel + 1;
+      const unlocked = parseInt(localStorage.getItem('unlockedLevel')) || 1;
+      if (nextLevel > unlocked && nextLevel <= 10) {
+        localStorage.setItem('unlockedLevel', nextLevel);
+      }
+    }
+    </script>
+</body>
+</html>
+
