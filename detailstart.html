@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="cordova.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header-levels">
+        <button class="back-button" onclick="location.href='games.html'">
+            <img src="icons/arrow.png" class="back-button-icon">
+        </button>
+        <button class="title-levels-button" onclick="toggleDetail()">&nbsp;Фото на память<img src="icons/question.png" class="icon-img question-icon">
+        </button>
+    </header>
+
+    <main class="detail-start-main">
+        <div id="start-screen">
+            <div id="high-score">Рекорд: 0 из 15</div>
+            <button id="start-btn" onclick="location.href='detailgame.html'">Начать игру</button>
+        </div>
+    </main>
+
+    <div id="detail-popup" class="popup hidden">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span>
+                    <img src="icons/rules.png" class="icon-img popup-icon">
+                    Правила игры:
+                </span>
+                <button onclick="toggleDetail()" class="close-btn">
+                    <img src="icons/close.png" class="icon-img close-icon">
+                </button>
+            </div>
+            <p>
+            • Вам показывают изображение на несколько секунд;<br>
+            • Картинка исчезает, и появляется вопрос о том, что было на ней;<br>
+            • Нужно выбрать один правильный ответ из нескольких вариантов;<br>
+            • Если ответил верно - получаешь 1 балл!;<br>
+            • Если ошибся - ничего страшного, попробуй ещё раз!;<br>
+            • Игра продолжается, пока не закончатся все картинки и вопросы;<br>
+            • Попробуй набрать как можно больше баллов.
+            </p>
+        </div>
+    </div>
+
+<script>
+  // Правила игры
+  function toggleDetail() {
+    document.getElementById("detail-popup").classList.toggle("hidden");
+  }
+
+  window.addEventListener("click", function (event) {
+    const popups = ["detail-popup"];
+    popups.forEach(id => {
+      const popup = document.getElementById(id);
+      if (!popup.classList.contains("hidden") && !popup.querySelector(".popup-content").contains(event.target)) {
+        popup.classList.add("hidden");
+      }
+    });
+  });
+
+  document.querySelectorAll(".title-levels-button").forEach(btn => {
+    btn.addEventListener("click", e => e.stopPropagation());
+  });
+
+    const highScore = localStorage.getItem('detailHighScore') || 0;
+    document.getElementById('high-score').textContent = `Рекорд: ${highScore} из 15`;
+    
+</script>
+
+</body>
+</html>
+

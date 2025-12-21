@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="cordova.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <script src="components/loader.js"></script>
+     <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header-games">
+        <button class="back-button" onclick="location.href='index.html'">
+            <img src="icons/arrow.png" class="back-button-icon">
+        </button>
+        <div class="title-games">Профиль</div>
+    </header>
+    <main class="main-profile">
+        <span class="profile-text">Никнейм игрока</span>
+        <div class="input-container">
+            <input type="text" id="name-input" class="input-profile">
+        </div>
+        <span class="profile-text">Сменить аватар</span>
+        <div class="avatar-section">
+            <div class="avatar-grid">
+                <img src="images/user.png" class="avatar-option" data-avatar="user">
+                <img src="images/man.png" class="avatar-option" data-avatar="man">
+                <img src="images/woman.png" class="avatar-option" data-avatar="woman">
+                <img src="images/woman2.png" class="avatar-option" data-avatar="woman2">
+                <img src="images/user2.png" class="avatar-option" data-avatar="user2">
+                <img src="images/gorilla.png" class="avatar-option" data-avatar="gorilla">
+                <img src="images/beaver.png" class="avatar-option" data-avatar="beaver">
+                <img src="images/profile.png" class="avatar-option" data-avatar="profile">
+                <img src="images/panda.png" class="avatar-option" data-avatar="panda">
+            </div>
+        </div>
+        <div class="btn-container">
+            <button class="save-btn" id="saveProfile">Сохранить профиль</button>
+        </div
+    </main>
+<script>
+
+const nameInput = document.getElementById("name-input");
+const playerName = localStorage.getItem('username');
+nameInput.value = playerName || 'Гость';
+
+nameInput.addEventListener('input', () => {
+    localStorage.setItem('username', nameInput.value);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+// Выбор аватарки
+    const avatarOptions = document.querySelectorAll('.avatar-option');
+    let selectedAvatar = localStorage.getItem('selectedAvatar') || '';
+
+    // Подсветка сохраненной аватарки
+    avatarOptions.forEach(avatar => {
+        if (avatar.dataset.avatar === selectedAvatar) {
+            avatar.classList.add('selected');
+        }
+        
+        avatar.addEventListener('click', function() {
+            avatarOptions.forEach(a => a.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedAvatar = this.dataset.avatar;
+        });
+});
+
+// Сохранение профиля
+document.getElementById('saveProfile').addEventListener('click', function() {
+
+    if (!nameInput.value) {
+        alert('Пожалуйста, введите имя игрока');
+        return;
+    }
+    
+    if (!selectedAvatar) {
+        alert('Пожалуйста, выберите аватарку');
+        return;
+    }
+
+    localStorage.setItem('selectedAvatar', selectedAvatar);
+    
+    alert('Профиль успешно сохранен!');
+});
+});
+
+</script>
+</body>
+</html>
+

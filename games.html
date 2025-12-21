@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="cordova.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header-games">
+        <button class="back-button" onclick="location.href='index.html'">
+            <img src="icons/arrow.png" class="back-button-icon">
+        </button>
+        <div class="title-games">Выбор игры</div>
+    </header>
+    <main>
+        <div class="container">
+            <button class="memory-btn" onclick="toggleMemory()"> 
+                <img src="icons/brain.png" alt="Память" class="brain-icon icon-img">
+                Кратковременная память
+                <img src="icons/information.png" alt="информация" class="information-icon icon-img"> 
+            </button>
+            <div class="gallery">
+                <div class="row">
+                    <div class="game-container">
+                        <button class="game-btn" onclick="window.location.href='numberslevels.html'">
+                            <img src="images/numbers.png" class="game-img">
+                        </button>
+                        <div id="numbers-score" class="game-score"></div>
+                    </div>
+                    <div class="game-container">
+                        <button class="game-btn" onclick="window.location.href='cardslevels.html'">
+                            <img src="images/cards.png" class="game-img">
+                        </button>
+                        <div id="cards-score" class="game-score"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="game-container">
+                        <button class="game-btn" onclick="window.location.href='detailstart.html'">
+                            <img src="images/detail.png" class="game-img">
+                        </button>
+                        <div id="detail-score" class="game-score">?/?</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer-games">
+    </footer>
+
+    <div id="memory-popup" class="popup hidden">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span>
+                    <img src="icons/idea.png" class="icon-img idea-icon">
+                    Про память:
+                </span>
+                <button onclick="toggleMemory()" class="close-btn">
+                    <img src="icons/close.png" class="icon-img close-icon">
+                </button>
+            </div>
+            <p>• Кратковременная память - это тип памяти, который позволяет временно удерживать и обрабатывать информацию в уме.
+            <br>• Тренировка кратковременной памяти помогает улучшить концентрацию внимания, способность к обучению и выполнению сложных умственных задач.
+            </p>
+        </div>
+    </div>
+
+<script>
+ 
+  // Памятка
+  function toggleMemory() {
+    document.getElementById("memory-popup").classList.toggle("hidden");
+  }
+
+  window.addEventListener("click", function (event) {
+    const popups = ["memory-popup"];
+    popups.forEach(id => {
+      const popup = document.getElementById(id);
+      if (!popup.classList.contains("hidden") && !popup.querySelector(".popup-content").contains(event.target)) {
+        popup.classList.add("hidden");
+      }
+    });
+  });
+
+  document.querySelectorAll(".memory-btn").forEach(btn => {
+    btn.addEventListener("click", e => e.stopPropagation());
+  });
+  // Уровни числа 
+  const unlockedLevel = localStorage.getItem('unlockedLevel') || "1";
+  const numbersScore = document.getElementById('numbers-score');
+  numbersScore.textContent = unlockedLevel + "/10";
+  // Уровни карты
+  const unlockedLevelCards = localStorage.getItem('unlockedLevelCards') || "1";
+  const cardsScore = document.getElementById('cards-score');
+  cardsScore.textContent = unlockedLevelCards + "/11";
+  // Рекорд детали
+  const recordDetail = localStorage.getItem('detailHighScore') || "0";
+  const datailScore = document.getElementById('detail-score');
+  datailScore.textContent = recordDetail + "/10";
+
+</script>
+</body>
+</html>
+

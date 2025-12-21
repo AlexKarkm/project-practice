@@ -1,0 +1,232 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="cordova.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <audio id="successSound" src="sounds/success.mp3" preload="auto"></audio>
+
+</head>
+<body>
+    <header class="header-levels">
+        <button class="back-button" onclick="location.href='games.html'">
+            <img src="icons/arrow.png" class="back-button-icon">
+        </button>
+        <span id="level" class="title-games">Уровень</span>
+    </header>
+
+  <menu class="cards-menu">
+
+    <div id="game-container">
+        <div id="game"></div>
+        <p id="moves">Количество ходов: 0</p>
+        <p id="feedback"></p>
+        <div id="menu-buttons">
+        <button id="restart-level" class="hidden again-button game-button">Повторить</button>
+        <button id="next-level" class="hidden next-button game-button">Продолжить</button>
+        </div>
+    </div>
+
+  </menu>
+
+    <div id="cards-popup" class="popup hidden">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span>
+                    <img src="icons/rules.png" class="icon-img popup-icon">
+                    Правила игры:
+                </span>
+                <button onclick="toggleCards()" class="close-btn">
+                    <img src="icons/close.png" class="icon-img close-icon">
+                </button>
+            </div>
+            <p>• Перед вами набор перевернутых карточек;<br>
+            • Каждая карточка имеет пару с таким же цветом;<br>
+            • За один ход можно перевернуть две карточки;<br>
+            • Если карточки совпадают - они остаются открытыми;<br>
+            • Если не совпадают - переворачиваются обратно;<br>
+            • Ваша задача - найти все пары за минимальное количество ходов.</p>
+        </div>
+    </div>
+
+  <script>
+  // Правила игры
+  function toggleCards() {
+    document.getElementById("cards-popup").classList.toggle("hidden");
+  }
+
+  window.addEventListener("click", function (event) {
+    const popups = ["cards-popup"];
+    popups.forEach(id => {
+      const popup = document.getElementById(id);
+      if (!popup.classList.contains("hidden") && !popup.querySelector(".popup-content").contains(event.target)) {
+        popup.classList.add("hidden");
+      }
+    });
+  });
+
+  document.querySelectorAll(".title-levels-button").forEach(btn => {
+    btn.addEventListener("click", e => e.stopPropagation());
+  });
+
+    // Цвета карточек 
+    const colors = [
+      '#FF5733', '#33FF57', '#3357FF', '#F3FF33',
+      '#FF33F3', '#33FFF3', '#FF8333', '#33FF83',
+      '#8333FF', '#FF3383', '#33FFA8', '#A833FF'
+    ];
+
+    const gameEl = document.getElementById("game");
+    const levelSpan = document.getElementById("level");
+    const nextLevelBtn = document.getElementById("next-level");
+    const restartLevelBtn = document.getElementById("restart-level");
+    const feedbackEl = document.getElementById("feedback");
+    const movesNumberEl = document.getElementById("moves");
+    const gameContainer = document.getElementById("game-container");
+    const leaderboardEl = document.getElementById("leaderboard");
+    const scoresTable = document.getElementById("scores-table");
+    const nameInput = document.getElementById("name-input");
+    const playerNameInput = document.getElementById("player-name-input");
+    const exitButton = document.getElementById("exit-button");
+
+    const soundEnabled = localStorage.getItem('sound') !== 'off';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const level = parseInt(urlParams.get('level'));
+
+    let currentLevel = level;
+    let matchedPairs = 0;
+    let movesNumber = 0;
+    let revealedCards = [];
+    let playerName = localStorage.getItem('playerName') || '';
+    let bestLevel = localStorage.getItem('bestLevel') || 0;
+
+    setupLevel();
+
+    // Логика игры
+    function setupLevel() {
+      levelSpan.textContent = "Уровень " + currentLevel.toString();
+      const pairsCount = currentLevel + 2;
+      const selectedColors = colors.slice(0, pairsCount);
+      const cards = [...selectedColors, ...selectedColors].sort(() => Math.random() - 0.5);
+
+      gameEl.innerHTML = '';
+      nextLevelBtn.classList.add("hidden");
+      feedbackEl.textContent = '';
+      matchedPairs = 0;
+      movesNumber = 0;
+      movesNumberEl.textContent = "Количество ходов: 0";
+      revealedCards = [];
+
+      cards.forEach(color => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.color = color;
+        card.style.backgroundColor = color;
+        gameEl.appendChild(card);
+      });
+
+      setTimeout(() => {
+        document.querySelectorAll('.card').forEach(card => {
+          card.style.backgroundColor = '#ecf0f1';
+        });
+      }, 2000);
+
+      gameEl.onclick = handleCardClick;
+    }
+
+    function handleCardClick(e) {
+      const card = e.target.closest('.card');
+      if (!card || card.classList.contains("matched") || revealedCards.includes(card)) return;
+
+      card.style.backgroundColor = card.dataset.color;
+      revealedCards.push(card);
+
+      if (revealedCards.length === 2) {
+        const [first, second] = revealedCards;
+
+        movesNumber++;
+        movesNumberEl.textContent = "Количество ходов: " + movesNumber.toString();
+        
+        if (first.dataset.color === second.dataset.color) {
+          first.classList.add("matched");
+          second.classList.add("matched");
+          matchedPairs++;
+          
+          if (matchedPairs === currentLevel + 2) {
+            if (soundEnabled) document.getElementById('successSound').play();
+            feedbackEl.textContent = "🎉 Уровень пройден!";
+            nextLevelBtn.classList.remove("hidden");
+            restartLevelBtn.classList.remove("hidden");
+            unlockNextLevel(currentLevel);
+            
+            if (currentLevel > bestLevel) {
+              bestLevel = currentLevel;
+              localStorage.setItem('bestLevel', bestLevel);
+            }
+          }
+        } else {
+          setTimeout(() => {
+            first.style.backgroundColor = '#ecf0f1';
+            second.style.backgroundColor = '#ecf0f1';
+          }, 1000);
+        }
+        
+        revealedCards = [];
+      }
+    }
+
+    nextLevelBtn.onclick = () => {
+      currentLevel++;
+      setupLevel();
+    };
+
+    restartLevelBtn.onclick = () => {
+        setupLevel();
+    };
+
+    // Выход в меню с сохранением
+    function exitToMenu() {
+      if (currentLevel > bestLevel) {
+        bestLevel = currentLevel;
+        localStorage.setItem('bestLevel', bestLevel);
+        
+        if (!playerName) {
+          playerNameInput.classList.remove("hidden");
+          return;
+        } else {
+          saveScore();
+        }
+      }
+      
+      showMenu();
+    }
+
+    function showMenu() {
+      document.getElementById("menu").classList.remove("hidden");
+      gameContainer.classList.add("hidden");
+      leaderboardEl.classList.add("hidden");
+    }
+
+    if (playerName) {
+      nameInput.value = playerName;
+    }
+
+    // Сохранение результатов
+    function unlockNextLevel(currentLevel) {
+      const nextLevel = currentLevel + 1;
+      const unlocked = parseInt(localStorage.getItem('unlockedLevelCards')) || 1;
+      if (nextLevel > unlocked && nextLevel <= 11) {
+        localStorage.setItem('unlockedLevelCards', nextLevel);
+      }
+    }
+
+  </script>
+
+</body>
+</html>
+

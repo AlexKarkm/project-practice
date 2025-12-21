@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="cordova.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <script src="components/loader.js"></script>
+    <audio id="successSound" src="sounds/success.mp3" preload="auto"></audio>
+    <audio id="failSound" src="sounds/fail.mp3" preload="auto"></audio>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .title-games{
+            color: white;
+            position: absolute;
+            display: inline-block; 
+            font-family: sans-serif;         
+            font-size: 40px;
+            font-weight: bold;
+            letter-spacing: -1.5px;
+        }
+        .header-levels{
+            display: flex;          
+            align-items: center;    
+            justify-content: center;
+            position: relative; 
+            background: #78a5b2;
+            height: 10vh;
+            box-shadow: 0px 2px 5px;
+
+        }
+        .back-button {
+            background: none; 
+            border: none;      
+            position: absolute;
+            left: 12px;
+        }
+
+        .back-button-icon {
+            width: 32px;
+            height: 32px;
+        }
+        .main-detail { 
+            font-family: sans-serif; 
+            text-align: center; 
+            padding: 0; 
+        }
+        .game-detail { 
+            max-width: 600px; 
+            margin: auto; 
+            padding: 10px; 
+        }
+        .img-detail { 
+            max-width: 100%; 
+            border-radius: 12px; 
+            width: 600px;
+            height: 350px;
+        }
+        #options button { 
+            margin: 10px; 
+            padding: 16px 28px; 
+            font-size: 20px; 
+            border: 1px solid balck;
+            border-radius: 10px;
+            font-weight: bold; 
+        }
+        #options button.correct {
+            background-color: #4CAF50; /* Зелёный цвет */
+            color: white;
+        }
+        #next {
+            margin: 10px; 
+            padding: 20px 35px; 
+            font-size: 24px; 
+            border: 1px solid balck;
+            border-radius: 10px;
+            color: white;
+            background-color: #29871f;
+            font-weight: bold; 
+        }
+        .feedback-detail {
+            margin-top: 15px; 
+            font-weight: bold; 
+            font-size: 22px; 
+        }
+        #score, #timer { 
+            font-size: 22px; 
+            margin: 10px; 
+        }
+        .q-text {
+            font-size: 26px; 
+            font-weight: bold;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header-levels">
+        <button class="back-button" onclick="location.href='games.html'">
+            <img src="icons/arrow.png" class="back-button-icon">
+        </button>
+        <span id="level" class="title-games">Уровень</span>
+    </header>
+    <main class="main-detail">
+        <div id="game" class="game-detail">
+            <div id="score" class="score-detail">Очки: 0</div>
+            <div id="timer" class="timer-detail">Осталось: 3 сек</div>
+            <div id="img-section"><img id="memimg" class="img-detail" src="" alt="" loading="eager"></div>
+            <div id="q-section" class="hidden q-section">
+                <p id="qtext" class="q-text"></p>
+            <div id="options" class="options-detail"></div>
+            </div>
+            <div id="feedback" class="hidden feedback-detail"></div>
+            <button id="next" class="hidden next-detail">Следующий</button>
+        </div>
+    </main>
+
+  <script>
+    // Уровни игры
+    const levels = [
+      {img:"images/detailpictures/picture1.jpg",q:"Сколько человек было на картинке?",opts:["4","6","8"],a:"6"},
+      {img:"images/detailpictures/picture2.jpg",q:"Какого цвета был воздушный шар?",opts:["Белый","Оранжевый","Красный"],a:"Красный"},
+      {img:"images/detailpictures/picture3.jpg",q:"Кусок чего был на терелке у девочки?",opts:["Сыра","Шоколада","Торта"],a:"Торта"},
+      {img:"images/detailpictures/picture4.jpg",q:"Какого цвета мяч у мальчишек?",opts:["Зелёный","Красный","Оранжевый"],a:"Зелёный"},
+      {img:"images/detailpictures/picture5.jpg",q:"Какого цвета домик на стене?",opts:["Белый","Розовый","Синий"],a:"Розовый"},
+      {img:"images/detailpictures/picture6.jpg",q:"Какого цвета серьги у тётеньки с кувшином?",opts:["Жёлтые","Белые","Красные"],a:"Жёлтые"},
+      {img:"images/detailpictures/picture7.jpeg",q:"Что на голове у дяденьки с собакой?",opts:["Кепка","Очки","Наушники"],a:"Наушники"},
+      {img:"images/detailpictures/picture8.jpg",q:"Сколько деревьев было на картинке?",opts:["6","7","9"],a:"7"},
+      {img:"images/detailpictures/picture9.jpg",q:"Сколько мячей было на картинке?",opts:["1","2","3"],a:"3"},
+      {img:"images/detailpictures/picture10.png",q:"Сколько спальных мест было изображено?",opts:["1","2","3"],a:"3"},
+    ];
+    let lvl = 0, score = 0, countdown = 3, timer;
+    const imgEl = document.getElementById('memimg'),
+          qSec = document.getElementById('q-section'),
+          qText = document.getElementById('qtext'),
+          opts = document.getElementById('options'),
+          fb = document.getElementById('feedback'),
+          nxt = document.getElementById('next'),
+          timerEl = document.getElementById('timer'),
+          scoreEl = document.getElementById('score');
+          levelSpan = document.getElementById('level');
+    
+    let isAnswered = false;
+    const soundEnabled = localStorage.getItem('sound') !== 'off';
+
+    function startTimer(callback) {
+      countdown = 15;
+      timerEl.textContent = `Осталось: ${countdown} сек`;
+      timer = setInterval(() => {
+        countdown--;
+        timerEl.textContent = `Осталось: ${countdown} сек`;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          callback();
+        }
+      }, 1000);
+    }
+
+    function play() {
+      levelSpan.textContent = "Уровень " + (lvl+1).toString();
+      const L = levels[lvl];
+      imgEl.src = L.img;
+      imgEl.classList.remove('hidden');
+    timerEl.classList.remove('hidden');
+      qSec.classList.add('hidden');
+      fb.classList.add('hidden');
+      nxt.classList.add('hidden');
+      startTimer(() => {
+        imgEl.classList.add('hidden');
+        showQ(L);
+      });
+    }
+
+function showQ(L) {
+    timerEl.classList.add('hidden');
+    qText.textContent = L.q;
+    opts.innerHTML = '';
+    L.opts.forEach(o => {
+        const b = document.createElement('button');
+        b.textContent = o;
+        b.onclick = () => {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const buttons = opts.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+
+                if (btn.textContent === L.a) {
+                    btn.classList.add('correct');
+                }
+            });
+
+            if (o === L.a) {
+                if (soundEnabled) document.getElementById('successSound').play();
+                fb.textContent = "Верно!";
+                score++;
+                scoreEl.textContent = `Очки: ${score}`;
+            } else {
+                if (soundEnabled) document.getElementById('failSound').play();
+                fb.textContent = `Неверно. Правильный: ${L.a}`;
+                b.style.backgroundColor = "#f44336";
+                b.style.color = "white";
+            }
+            fb.classList.remove('hidden');
+            nxt.classList.remove('hidden');
+        };
+        opts.appendChild(b);
+    });
+    qSec.classList.remove('hidden');
+}
+
+    
+
+nxt.onclick = () => {
+    isAnswered = false;
+    lvl++;
+    if (lvl < levels.length) {
+        play();
+    } else {
+        fb.textContent = `Игра завершена! Ваш результат: ${score} из ${levels.length}`;
+        nxt.classList.add('hidden');
+        qSec.classList.add('hidden');
+        timerEl.classList.add('hidden');
+
+        const currentHighScore = localStorage.getItem('detailHighScore') || 0;
+        if (score > currentHighScore) {
+            localStorage.setItem('detailHighScore', score);
+        }
+    }
+};
+
+    play();
+  </script>
+
+</body>
+</html>
+

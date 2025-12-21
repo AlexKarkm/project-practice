@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="cordova.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header-levels">
+        <button class="back-button" onclick="location.href='games.html'">
+            <img src="icons/arrow.png" class="back-button-icon">
+        </button>
+        <button class="title-levels-button" onclick="toggleNumbers()">&nbsp;Запомни числа<img src="icons/question.png" class="icon-img question-icon">
+        </button>
+    </header>
+    <main class="main-numbers">
+         <div class="levels-container">
+
+            <button class="level-circle" style="--level-color: #4CAF50;">1</button>
+            <button class="level-circle" style="--level-color: #4CAF50;">2</button>
+            <button class="level-circle" style="--level-color: #4CAF50;">3</button>
+            
+            <button class="level-circle" style="--level-color: #FF9800;">4</button>
+            <button class="level-circle" style="--level-color: #FF9800;">5</button>
+            <button class="level-circle" style="--level-color: #FF9800;">6</button>
+            <button class="level-circle" style="--level-color: #FF9800;">7</button>
+            
+            <button class="level-circle" style="--level-color: #F44336;">8</button>
+            <button class="level-circle" style="--level-color: #F44336;">9</button>
+            <button class="level-circle" style="--level-color: #F44336;">10</button>
+        </div>
+    </main>
+
+    <div id="numbers-popup" class="popup hidden">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span>
+                    <img src="icons/rules.png" class="icon-img popup-icon">
+                    Правила игры:
+                </span>
+                <button onclick="toggleNumbers()" class="close-btn">
+                    <img src="icons/close.png" class="icon-img close-icon">
+                </button>
+            </div>
+            <p>• В начале каждого уровня на экране появятся числа.<br>
+      • У вас есть несколько секунд, чтобы их запомнить.<br>
+      • Числа исчезнут, и вам нужно ввести их в том же порядке.<br>
+      • Если вы ввели все числа правильно, переходите на следующий уровень.<br>
+      • Ошибка завершает игру, но вы можете попробовать снова!</p>
+        </div>
+    </div>
+
+<script>
+    
+  // Правила игры 
+  function toggleNumbers() {
+    document.getElementById("numbers-popup").classList.toggle("hidden");
+  }
+
+  window.addEventListener("click", function (event) {
+    const popups = ["numbers-popup"];
+    popups.forEach(id => {
+      const popup = document.getElementById(id);
+      if (!popup.classList.contains("hidden") && !popup.querySelector(".popup-content").contains(event.target)) {
+        popup.classList.add("hidden");
+      }
+    });
+  });
+
+  document.querySelectorAll(".title-levels-button").forEach(btn => {
+    btn.addEventListener("click", e => e.stopPropagation());
+  });
+
+  // Открытие уровней
+  const unlockedLevel = parseInt(localStorage.getItem('unlockedLevel')) || 1;
+  const totalLevels = 10;
+
+  const circles = document.getElementsByClassName('level-circle');
+
+    for (let i = 0; i < circles.length; i++) {
+        const btn = circles[i];
+        if (i+1 > unlockedLevel) {
+            btn.classList.add('locked');
+            btn.disabled = true;
+        } else {
+            btn.onclick = () => {
+            window.location.href = `numbersgame.html?level=${i+1}`;
+        };
+      }
+    }
+
+</script>
+
+</body>
+</html>
+

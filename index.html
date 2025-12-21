@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: content: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="cordova.js"></script>
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+    </script>
+</head>
+<body>
+	<header class="header">
+        <button class="settings-button" onclick="toggleSettings()">
+            <img src="icons/settings-icon.png" alt="Настройки" class="settings-icon"> 
+        </button>
+        <div class="title">MemoRise</div>
+    </header>
+    <main class="main">
+        <button class="start-btn" onclick="window.location.href='games.html'">Играть</button>
+    </main>
+    <footer class="footer"> 
+        <button class="player-card" onclick="window.location.href='profile.html'">
+            <div id="player-name" class="player-name">Player_2019</div>
+            <div class="player-avatar">
+                <img id="user-avatar" src="images/user.png" alt="Avatar">
+            </div>
+            <div class="player-score">
+                <span class="score">0</span>
+                <img src="icons/trophy.png" class="trophy icon-img">
+            </div>
+        </button>
+    </footer>
+
+    <div id="settings-popup" class="popup top hidden">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span>Настройки</span>
+                <button onclick="toggleSettings()" class="close-btn">
+                    <img src="icons/close.png" class="icon-img close-icon">
+                </button>
+            </div>
+            <label>
+                <input type="checkbox" id="sound-checkbox" />
+                выключить звуки
+            </label>
+            <button class="disabled-btn" id="resetProgressBtn">удалить прогресс</button>
+        </div>
+  </div>
+
+<script>
+
+// Выключение звуков
+  const soundToggle = document.getElementById('sound-checkbox');
+
+  if (localStorage.getItem('sound') == 'off') {
+    soundToggle.checked = true;
+  }
+
+  soundToggle.addEventListener('change', () => {
+    if (soundToggle.checked) {
+      localStorage.setItem('sound', 'off');
+    } else {
+      localStorage.setItem('sound', 'on');
+    }
+  });
+
+// Удалить прогресс
+  document.getElementById('resetProgressBtn').addEventListener('click', () => {
+    if (confirm('Вы уверены, что хотите сбросить прогресс?')) {
+      localStorage.removeItem('unlockedLevel');
+      localStorage.removeItem('unlockedLevelCards');
+      localStorage.removeItem('detailHighScore');
+      alert('Прогресс сброшен!');
+    }
+  });
+
+//   Окно настроек
+  function toggleSettings() {
+    document.getElementById("settings-popup").classList.toggle("hidden");
+  }
+
+  window.addEventListener("click", function (event) {
+    const popups = ["settings-popup"];
+    popups.forEach(id => {
+      const popup = document.getElementById(id);
+      if (!popup.classList.contains("hidden") && !popup.querySelector(".popup-content").contains(event.target)) {
+        popup.classList.add("hidden");
+      }
+    });
+  });
+
+  document.querySelectorAll(".settings-button").forEach(btn => {
+    btn.addEventListener("click", e => e.stopPropagation());
+  });
+
+  const username = localStorage.getItem('username');
+  document.getElementById('player-name').textContent = username || 'Гость';
+
+
+  let userAvatar = localStorage.getItem('selectedAvatar') || 'user';
+
+  document.getElementById('user-avatar').src = `images/${userAvatar}.png`;
+
+</script>
+</body>
+</html>
+
