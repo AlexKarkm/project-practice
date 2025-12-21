@@ -15,6 +15,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
+      - name: Validate structure
+        run: |
+          echo "=== Проверка проекта ==="
+          [ -f "www/index.html" ] || { echo "Нет index.html"; exit 1; }
+          [ -f "Dockerfile" ] || { echo "Нет Dockerfile"; exit 1; }
+          echo "Все файлы на месте"
+      
+      - name: Build Docker image
+        run: |
+          echo "=== Сборка Docker образа ==="
+          docker build -t memorise-app .
+          echo "Образ собран: memorise-app"
+          docker images | grep memorise-app
+      
+      - name: Test Docker container
+        run: |
+          echo "=== Тестирование контейнера ==="
+          docker run -d --name test-container -p 8081:80 memorise-app
+          sleep 5
+          
+          echo "Проверяем, что контейнер отвечает..."
+          if curl -s -f http://localhost:8081 > /dev/null; then
+            echo "Контейнер работает!"
+            echo "Логи контейнера:"
+            docker logs test-container --tail 5
+          else
+            echo "Контейнер не запустился"
+            docker logs test-container
+            exit 1
+          fi
+          
+          echo "Останавливаем тестовый контейнер..."
+          docker stop test-container
+          docker rm test-container
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
