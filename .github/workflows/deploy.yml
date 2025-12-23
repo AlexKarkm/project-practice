@@ -17,18 +17,17 @@ jobs:
       
       - name: Validate structure
         run: |
-          [ -f "www/index.html" ] || { echo "Нет index.html"; exit 1; }
-          [ -f "Dockerfile" ] || { echo "Нет Dockerfile"; exit 1; }
+          [ -f "www/index.html" ] || { echo "No include index.html"; exit 1; }
+          [ -f "Dockerfile" ] || { echo "no include Dockerfile"; exit 1; }
       
       - name: Build Docker image
         run: |
-          docker build -t memorise-app .
-          echo "Образ собран: memorise-app"
-          docker images | grep memorise-app
+          docker build -t memorise .
+          docker images | grep memorise
       
       - name: Test Docker container
         run: |
-          docker run -d --name test-container -p 8081:80 memorise-app
+          docker run -d --name test-container -p 8081:80 memorise
           sleep 5
           
           if curl -s -f http://localhost:8081 > /dev/null; then
