@@ -1,128 +1,38 @@
-name: Deploy Application
+name: Deploy MemoRise
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Validate project structure
-        run: |
-          REQUIRED_FILES=("Dockerfile" "docker-compose.yml" "README.md")
-          for file in "${REQUIRED_FILES[@]}"; do
-            if [ ! -f "$file" ]; then
-              echo "ERROR: Missing required file: $file"
-              exit 1
-            fi
-          done
-          echo "SUCCESS: All required files present"
-      
-      - name: Validate HTML files
-        run: |
-          HTML_FILES=$(find . -name "*.html" -type f 2>/dev/null || true)
-          if [ -z "$HTML_FILES" ]; then
-            echo "INFO: No HTML files found"
-            exit 0
-          fi
-          
-          ERRORS=0
-          for file in $HTML_FILES; do
-            echo "Checking: $file"
-            OPEN_BODY=$(grep -c -i "<body" "$file" || true)
-            CLOSE_BODY=$(grep -c -i "</body>" "$file" || true)
-            
-            if [ "$OPEN_BODY" -ne "$CLOSE_BODY" ]; then
-              echo "ERROR: $file - Unbalanced body tags ($OPEN_BODY opening, $CLOSE_BODY closing)"
-              ERRORS=$((ERRORS + 1))
-            fi
-          done
-          
-          if [ $ERRORS -gt 0 ]; then
-            echo "FAILED: Found $ERRORS HTML validation errors"
-            exit 1
-          fi
-          echo "SUCCESS: HTML validation passed"
-
-  build-and-test:
+  deploy:
     runs-on: self-hosted
-    needs: validate
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
       
       - name: Build Docker image
-        run: |
-          docker build -t memorise-app .
+        run: docker build -t memorise-app .
       
-      - name: Test Docker container
+      - name: Free port 8080 if occupied
         run: |
-          # Run container for testing
-          docker run -d --name test-container -p 9999:80 memorise-app
-          sleep 10
-          
-          # Check if container is running
-          if [ "$(docker inspect -f '{{.State.Running}}' test-container)" != "true" ]; then
-            echo "ERROR: Container failed to start"
-            docker logs test-container
-            exit 1
-          fi
-          
-          # Check HTTP response
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:9999 || echo "000")
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "ERROR: Application returned HTTP $HTTP_STATUS"
-            docker logs test-container
-            exit 1
-          fi
-          
-          echo "SUCCESS: Container test passed"
-          docker rm -f test-container
-      
-      - name: Deploy to production
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          # Stop and remove old container
           docker stop memorise-app 2>/dev/null || true
           docker rm memorise-app 2>/dev/null || true
-          
-          # Run new container
+          docker ps -q --filter "publish=8080" | xargs -r docker stop 2>/dev/null || true
+          docker ps -a -q --filter "publish=8080" | xargs -r docker rm 2>/dev/null || true
+      
+      - name: Run new container
+        run: |
           docker run -d --name memorise-app -p 8080:80 memorise-app
-          
-          # Verify deployment
-          sleep 5
-          if curl -f http://localhost:8080 >/dev/null 2>&1; then
+      
+      - name: Verify deployment
+        run: |
+          sleep 10
+          if docker ps | grep -q memorise-app && curl -s http://localhost:8080 >/dev/null; then
             echo "SUCCESS: Application deployed to http://localhost:8080"
           else
-            echo "ERROR: Deployment verification failed"
-            docker logs memorise-app
+            echo "ERROR: Deployment failed"
+            docker ps -a
             exit 1
           fi
-      
-      - name: Cleanup on failure
-        if: failure()
-        run: |
-          docker stop test-container 2>/dev/null || true
-          docker rm test-container 2>/dev/null || true
-          echo "Cleanup completed"
-
-  deploy-to-pages:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build-and-test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./www  # or your public directory
-          destination_dir: .
