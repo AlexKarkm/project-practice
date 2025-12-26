@@ -43,8 +43,8 @@ jobs:
           if curl -s -f http://localhost:8081 > /dev/null; then
             echo "SUCCESS: Container is running"
             docker logs memorise-game-cont1 --tail 3
-            docker stop memorise-game-cont1
-            docker rm memorise-game-cont1
+            #docker stop memorise-game-cont1
+            #docker rm memorise-game-cont1
           else
             echo "ERROR: Container failed to start"
             docker logs memorise-game-cont1
