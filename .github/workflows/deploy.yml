@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: self-hosted
@@ -12,27 +15,44 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
-      - name: Build Docker image
-        run: docker build -t memorise-app .
-      
-      - name: Free port 8080 if occupied
+      - name: Validate project structure
         run: |
-          docker stop memorise-app 2>/dev/null || true
-          docker rm memorise-app 2>/dev/null || true
-          docker ps -q --filter "publish=8080" | xargs -r docker stop 2>/dev/null || true
-          docker ps -a -q --filter "publish=8080" | xargs -r docker rm 2>/dev/null || true
-      
-      - name: Run new container
-        run: |
-          docker run -d --name memorise-app -p 8080:80 memorise-app
-      
-      - name: Verify deployment
-        run: |
-          sleep 10
-          if docker ps | grep -q memorise-app && curl -s http://localhost:8080 >/dev/null; then
-            echo "SUCCESS: Application deployed to http://localhost:8080"
-          else
-            echo "ERROR: Deployment failed"
-            docker ps -a
+          if [ ! -f "www/index.html" ]; then
+            echo "ERROR: index.html not found in www/"
             exit 1
           fi
+          if [ ! -f "Dockerfile" ]; then
+            echo "ERROR: Dockerfile not found"
+            exit 1
+          fi
+          echo "SUCCESS: All required files are present"
+      
+      - name: Build Docker image
+        run: |
+          echo "=== Building Docker image ==="
+          docker build -t memorise-game .
+          echo "SUCCESS: Image built successfully"
+          docker images | grep memorise-game
+      
+      - name: Test Docker container
+        run: |
+          echo "=== Testing Docker container ==="
+          docker run -d --name test-container -p 8081:80 memorise-game
+          sleep 5
+          
+          if curl -s -f http://localhost:8081 > /dev/null; then
+            echo "SUCCESS: Container is running"
+            docker logs test-container --tail 3
+            docker stop test-container
+            docker rm test-container
+          else
+            echo "ERROR: Container failed to start"
+            docker logs test-container
+            exit 1
+          fi
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./www
