@@ -37,17 +37,17 @@ jobs:
       - name: Test Docker container
         run: |
           echo "=== Testing Docker container ==="
-          docker run -d --name memorise-game-cont1 -p 8081:80 memorise-game
+          docker run -d --name test-cont -p 8081:80 memorise-game
           sleep 5
           
           if curl -s -f http://localhost:8081 > /dev/null; then
             echo "SUCCESS: Container is running"
-            docker logs memorise-game-cont1 --tail 3
-            #docker stop memorise-game-cont1
-            #docker rm memorise-game-cont1
+            docker logs test-cont --tail 3
+            docker stop test-cont
+            docker rm test-cont
           else
             echo "ERROR: Container failed to start"
-            docker logs memorise-game-cont1
+            docker logs test-cont
             exit 1
           fi
       
